@@ -4,6 +4,7 @@
   "description": "Serve postgis queries from file as mapbox vector tile (mvt) layer or layerset. ",
   "main": "pgsql2mvt.js",
   "scripts": {
+    "start": "node pgsql2mvt.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

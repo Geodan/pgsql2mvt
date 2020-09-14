@@ -6,22 +6,22 @@ Other mvt servers let you define databases, fields and tables, but if you have s
 * git
 * node
 
-## install
+## Install
 ```
 git clone this_repository
 cd this_repository
 npm install
 ```
 
-## configure
+## Configure
 The pgsql2mvt service requires one json configuration file per layer in directory 'layers'  
 See layers/example.json.example, remove the '.example' extension and edit to your needs. ${z}, ${x} and ${y} are placeholders for tile coordinates z, x, y
 
 Restart the service to load configuration changes
 
-**Note**: for reasons of user-friendlyness, the sql queries in the layer configuration can be split into multiple json lines (json array of strings). If you copy-paste these lines into tool '[DBeaver](https://dbeaver.io)', DBeaver automagically removes quotes and trailing comma's and asks to supply values for z, x and y. You can inspect the generated sql query by setting .sql as extension (see urls described below)
+**Note**: for reasons of user-friendlyness, the sql queries in the layer configuration can be split into multiple json lines (json array of strings). If you copy-paste these lines into tool '[DBeaver](https://dbeaver.io)', DBeaver automagically removes quotes and trailing comma's and asks to supply values for z, x and y. You can also inspect the generated sql query by setting '.sql' as url extension (see urls described below)
 
-## run
+## Run
 ```
 npm start
 ```

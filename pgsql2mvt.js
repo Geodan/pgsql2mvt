@@ -46,6 +46,16 @@ function loadLayerMap(){
 
 let layerMap = loadLayerMap();
 
+if (layerMap.size === 0) {
+    console.log('no layer definitions found in directory ./layers, aborting');
+    process.exit(1);
+}
+
+console.log('Loaded configurations for layers:');
+for (let layerconfig of layerMap.keys()) {
+    console.log(layerconfig);
+}
+
 app.get('/mvt/:layer/:z/:x/:y.:extension', async (req, res)=> {
     let config = layerMap.get(req.params.layer);
     if (!config) {
