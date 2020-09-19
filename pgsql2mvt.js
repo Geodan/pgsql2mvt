@@ -17,10 +17,10 @@ const pgp = require('pg-promise')({
 });
 
 function loadLayerMap(){
-    // assumes queries are in subdirectory 'layers'
+    // assumes layer definitions are in subdirectory 'layers'
     let files = fs.readdirSync(`${__dirname}/layers`);
     files = files.filter(file=>file.slice(-5) === '.json');
-    let configs = files.map(file=>{
+    return new Map(files.map(file=>{
         let rawdata = fs.readFileSync(`${__dirname}/layers/${file}`);
         let config = JSON.parse(rawdata);
         config.host = config.host ? config.host : process.env.PGHOST;
@@ -29,19 +29,17 @@ function loadLayerMap(){
         config.database = config.database ? config.database : process.env.PGDATABASE;
         config.ssl = config.ssl ? config.ssl : process.PGSSLMODE;
         config.port = config.port ? config.port : process.PGPORT ? process.env.PGPORT : 5432;
-        if (Array.isArray(config.sql)) {
-            config.sql = config.sql.join('\n');
-        }    
+        config.zoomlevels = config.zoomlevels ? config.zoomlevels : [];
+        config.zoomlevels = config.zoomlevels.map(level=>{
+            level.minzoom  = level.minzoom ? parseInt(level.minzoom) : 0;
+            level.sql = level.sql ? (Array.isArray(level.sql) ? level.sql.join('\n').trim() : typeof level.sql === string ? level.sql.trim() : "") : ""
+            return level;
+        }).sort((level1, level2)=>level2.minzoom - level1.minzoom);
         config.file = file;
         config.layer = file.slice(0,-5);
         config.dbConnection = pgp(config);
-        return config;
-    });
-    let layerMap = new Map();
-    for (let config of configs) {
-        layerMap.set(config.layer, config);
-    }
-    return layerMap;
+        return [config.layer, config];
+    }));
 }
 
 let layerMap = loadLayerMap();
@@ -65,7 +63,9 @@ app.get('/mvt/:layer/:z/:x/:y.:extension', async (req, res)=> {
     let z = parseInt(req.params.z);
     let x = parseInt(req.params.x);
     let y = parseInt(req.params.y);
-    let sql = config.sql.replace(/\${z}|\${x}|\${y}/gi, (match)=>{
+    let sqlForZoom = config.zoomlevels.find(level => z >= level.minzoom);
+    let sql = sqlForZoom ? sqlForZoom.sql : "";
+    sql = sql.replace(/\${z}|\${x}|\${y}/gi, (match)=>{
         switch (match) {
             case '${z}':
             case '${Z}':
@@ -90,6 +90,11 @@ app.get('/mvt/:layer/:z/:x/:y.:extension', async (req, res)=> {
             break;
         case 'mvt':
         case 'pbf':
+            if (sql === "") {
+                res.status(204);
+                res.header('Content-Type', 'application/x-protobuf').send();
+                return;
+            }
             try {
                 const result = await config.dbConnection.one(sql, []);
                 const tileData = result.tile ? result.tile : result[Object.keys(result)[0]];
@@ -122,4 +127,3 @@ app.get('/mvt/:layer/:z/:x/:y.:extension', async (req, res)=> {
 const server = app.listen(serverconfig.port);
 server.setTimeout(600000);
 console.log(`pgserver listening on port ${serverconfig.port}`);
-

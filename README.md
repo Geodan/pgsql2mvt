@@ -1,21 +1,30 @@
 # pgsql2mvt
-Serve user defined PostGIS queries as mapbox vector tile layers  
-Other mvt servers let you define databases, fields and tables, but if you have special requirements, such as multiple layer output in a single mvt tile or special 'where' clauses or joined tables or unions or function calls or type conversions or concatenated attributes or tables from multiple databases, this tool may come in handy.
+Serve user defined PostGIS queries as mapbox vector tile layers. Intended for flexibility.
+Other mvt tile servers let you define databases, fields and tables, or they scan the whole database. If you have special requirements, such as zoom dependent queries or multiple layer output in a single mvt tile or special 'where' clauses or joined tables or unions or function calls or type conversions or concatenated attributes or tables from multiple databases, or custom layer names or only database read access or a need for application configuration outside the database, this tool may come in handy.
 
 ## Requirements
-* git
-* node
+* node (includes npm)
+* (read) access to a PostGIS database
 
 ## Install
+If you have git installed:
 ```
 git clone this_repository
 cd this_repository
 npm install
 ```
 
+Without git:  
+download zip file from https://github.com/Geodan/pgsql2mvt/archive/master.zip, then:
+```
+unzip pgsql2mvt-master.zip
+cd pgsql2mvt-master
+npm install
+```
+
 ## Configure
 The pgsql2mvt service requires one json configuration file per layer in directory 'layers'  
-See layers/example.json.example, remove the '.example' extension and edit to your needs. ${z}, ${x} and ${y} are placeholders for tile coordinates z, x, y
+See layers/example.json.example, remove the '.example' extension and edit to your needs. ${z}, ${x} and ${y} are placeholders for tile coordinates z, x, y, "minzoom" is the minimum zoomlevel (z) where the query applies, empty sql strings return empty tiles.
 
 Restart the service to load configuration changes
 
