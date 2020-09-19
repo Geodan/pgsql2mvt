@@ -8,35 +8,25 @@
     "idleTimeoutMillis": 30000,
     "connectionTimeoutMillis": 20000,
     "query_timeout": 30000,
-    "zoomlevels": [
-        {
-            "minzoom": 13,
-            "sql": [
-                "with layer1geom as",
+    "sql": [
+        "select tile, md5(tile) as key from ",
+        "(",
+            "select string_agg(tilelayer, '') as tile from",
+            "(",
+                "select coalesce(st_asMVT(t, 'layer1', 4096), '') as tilelayer from ",
                 "(",
-                "   select st_asmvtgeom(st_transform(geomfield, 3857), st_tileenvelope(${z},${x},${y})) as geom,field2,field3",
-                "    from someschema.sometable1",
-                "     where st_intersects(geomfield, st_transform(st_tileenvelope(${z},${x},${y}),28992))",
-                ")",
-                ", layer1 as ",
+                        "select st_asmvtgeom(st_transform(geom, 3857), st_tileenvelope(${z},${x},${y})) as geom,id,attribute2,attribute3",
+                        "from myschema.layer1table",
+                            "where ${z} >= 13 and ${z} <= 18 and st_intersects(geom, st_transform(st_tileenvelope(${z},${x},${y}),28992))",
+                ") as t",
+                "union all ",
+                "select coalesce(st_asMVT(t, 'layer2', 4096), '') as tilelayer from ",
                 "(",
-                "    select st_asmvt(layer1geom.*, 'sometable1') layer1 from layer1geom",
-                ")",
-                ", layer2geom as (",
-                "   select st_asmvtgeom(st_transform(geomfield, 3857), st_tileenvelope(${z},${x},${y})) as geom,field3,field4,otherfield",
-                "    from someotherschema.someothertable2",
-                "     where st_intersects(geomfield, st_transform(st_tileenvelope(${z},${x},${y}),28992))",
-                ")",
-                ", layer2 as",
-                "(",
-                "   select st_asmvt(layer2geom.*, 'someothertable2') layer2 from layer2geom ",
-                ")",
-                "select layer1 || layer2 as tile from layer1, layer2"
-            ]
-        },
-        {
-            "minzoom": 19,
-            "sql": ""
-        }
-    ]   
+                    "select st_asmvtgeom(st_transform(geom, 3857), st_tileenvelope(${z},${x},${y})) as geom,id,layer2attribute2,layer2attribute3",
+                        "from myschema.layer2table",
+                            "where ${z} >= 13 and ${z} <= 18 and st_intersects(geom, st_transform(st_tileenvelope(${z},${x},${y}),28992))",
+                ") as t",
+            ") as mvtdata",
+        ") as mvtdata;"
+    ]
 }

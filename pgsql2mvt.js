@@ -29,12 +29,7 @@ function loadLayerMap(){
         config.database = config.database ? config.database : process.env.PGDATABASE;
         config.ssl = config.ssl ? config.ssl : process.PGSSLMODE;
         config.port = config.port ? config.port : process.PGPORT ? process.env.PGPORT : 5432;
-        config.zoomlevels = config.zoomlevels ? config.zoomlevels : [];
-        config.zoomlevels = config.zoomlevels.map(level=>{
-            level.minzoom  = level.minzoom ? parseInt(level.minzoom) : 0;
-            level.sql = level.sql ? (Array.isArray(level.sql) ? level.sql.join('\n').trim() : typeof level.sql === string ? level.sql.trim() : "") : ""
-            return level;
-        }).sort((level1, level2)=>level2.minzoom - level1.minzoom);
+        config.sql = config.sql ? (Array.isArray(config.sql) ? config.sql.join('\n').trim() : typeof config.sql === string ? config.sql.trim() : "") : "";
         config.file = file;
         config.layer = file.slice(0,-5);
         config.dbConnection = pgp(config);
@@ -63,8 +58,7 @@ app.get('/mvt/:layer/:z/:x/:y.:extension', async (req, res)=> {
     let z = parseInt(req.params.z);
     let x = parseInt(req.params.x);
     let y = parseInt(req.params.y);
-    let sqlForZoom = config.zoomlevels.find(level => z >= level.minzoom);
-    let sql = sqlForZoom ? sqlForZoom.sql : "";
+    let sql = config.sql;
     sql = sql.replace(/\${z}|\${x}|\${y}/gi, (match)=>{
         switch (match) {
             case '${z}':
